@@ -1,0 +1,7 @@
+## Installing packages
+Use the command
+`python3 -m pip install "<package_name>"`
+
+### Updating requiremnet.txt
+After installing a packge, update the requirements file with
+`pip freeze > requirements.txt`
