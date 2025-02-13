@@ -1,7 +1,5 @@
 
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+from src.data.clean import clean_data
 from src.data.data_Import import transform_data_to_df
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -33,6 +31,27 @@ def raw_eda():
     plt.show()
 
 
+def clean_eda():
+    clean = clean_data()
+
+    print(clean.describe())
+
+
+    clean_features = clean[['Age', 'Heart rate', 'Systolic blood pressure', 'Diastolic blood pressure','Blood sugar']]
+    clean_features.boxplot(figsize=(14, 8))
+    plt.xticks(rotation=45)
+    plt.ylim(-1, 500)
+    plt.show()
+
+    ck_mb = clean[['CK-MB']]
+    ck_mb.boxplot(figsize=(14, 8))
+    plt.ylim(-1, 100)
+    plt.show()
+
+    trop = clean[['Troponin']]
+    trop.boxplot(figsize=(14, 8))
+    plt.ylim(-0.1, 2)
+    plt.show()
 
 
 
@@ -40,8 +59,5 @@ def raw_eda():
 
 if __name__ == "__main__":
     raw_eda()
-
-
-  
-
-
+    clean_eda()
+    
