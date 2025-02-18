@@ -9,6 +9,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
+from sklearn.model_selection import cross_val_score, KFold
 import pandas as pd
 
 data = clean_data()
@@ -151,14 +152,28 @@ def Feature_importance():
     plt.figure(figsize=(12, 6))
     
     # Create the barplot
-    feature_plot = sns.barplot(x='Feature', y='Importance', data=feature_df)
+    feature_plot = sns.barplot(x='Feature', y='Importance', data=feature_df, palette='rocket_r')
     
-    # Rotate x-axis labels for better readability
-    plt.xticks(rotation=45, ha='right')
+    # Remove the top and right spines
+    sns.despine()
+    
+    # Add red border to top 3 bars
+    bars = feature_plot.patches
+    for i in range(3):  # First 3 bars (since data is already sorted)
+        bars[i].set_edgecolor('red')
+        bars[i].set_linewidth(3)
+    
+    # Add value labels on top of each bar
+    for i, v in enumerate(feature_df['Importance']):
+        weight = 'bold' if i < 3 else 'normal'  # Bold for top 3 bars
+        feature_plot.text(i, v, f'{v:.3f}', ha='center', va='bottom', weight=weight)
+    
+    # Set x-axis labels to vertical
+    plt.xticks(rotation=90)
     
     # Add title and labels
     plt.title('Feature Importance from Random Forest Model')
-    plt.xlabel('Features')
+    plt.xlabel('')  # Remove x-axis label
     plt.ylabel('Importance Score')
     
     # Adjust layout to prevent label cutoff
@@ -168,6 +183,26 @@ def Feature_importance():
     plt.show()
     
     return feature_plot
+
+#cross validation with random forest
+X_cv = standardize_data()
+y_cv = data['Result']
+def cross_validation():
+    model = RandomForestClassifier(random_state=42)
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X_cv, y_cv, cv=cv, scoring='accuracy')
+    print(f'Accuracy scores for each Random Forest fold: {scores}')
+    print(f'Mean Random Forest accuracy: {scores.mean()}')
+    print(f'Standard deviation of Random Forest accuracy: {scores.std()}')
+
+#cross validation with logistic regression model
+def cross_validation_logistic_regression():
+    model = LogisticRegression(random_state=42)
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X_cv, y_cv, cv=cv, scoring='accuracy')
+    print(f'Accuracy scores for each logistic regression fold: {scores}')
+    print(f'Mean logistic regression accuracy: {scores.mean()}')
+    print(f'Standard deviation of logistic regression accuracy: {scores.std()}')
 
 
 #support vector machine model, default parameters
@@ -187,6 +222,15 @@ def SVM_model_balanced():
     print("SVM balanced training score: ",train_score)
     print("SVM balanced accuracy score: ",accuracy_score(y_test, y_pred))
 
+def cross_validation_SVM():
+    model = SVC(random_state=42)
+    cv = KFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X_cv, y_cv, cv=cv, scoring='accuracy')
+    print(f'Accuracy scores for each SVM fold: {scores}')
+    print(f'Mean SVM accuracy: {scores.mean()}')
+    print(f'Standard deviation of SVM accuracy: {scores.std()}')
+
+
 
 
 
@@ -205,8 +249,11 @@ if __name__ == "__main__":
     Random_Forest_MinSpilt5()
     Random_Forest_Split_Depth()
     Feature_importance()
+    cross_validation()
+    cross_validation_logistic_regression()
     SVM_model()
     SVM_model_balanced()
+    cross_validation_SVM()
 
 
 
