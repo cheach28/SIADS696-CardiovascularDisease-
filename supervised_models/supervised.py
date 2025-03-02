@@ -25,17 +25,17 @@ def standardize_data():
     Standardize = scaler.fit_transform(x_data)
     return Standardize  
 
-# Split data into train, validation, and test sets (60/20/20)
+# Split data into train, validation, and test sets (60/20/20) to avoid using train data for both grid search and kfold evaluation
 X = standardize_data()  
 y = (data['Result'] == 'positive').astype(int)  # Maps 'positive' to 1 and 'negative' to 0 
 
 # First split: separate test set
 X_temp, X_test, y_temp, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Second split: separate validation set from remaining training data
+# Second split: separate validation set from remaining training data, training data 60 
 X_train, X_val, y_train, y_val = train_test_split(X_temp, y_temp, test_size=0.25, random_state=42)  # 0.25 * 0.8 = 0.2
 
-# Convert to numpy arrays
+# Convert to numpy arrays to avoid errors 
 X_train = np.asarray(X_train)
 X_val = np.asarray(X_val)
 X_test = np.asarray(X_test)
@@ -44,6 +44,7 @@ y_val = np.asarray(y_val)
 y_test = np.asarray(y_test)
 
 # find best hyperparameters using grid search cross validation for logistic regression, random forest and support vector machine
+# using k-fold cross validation with 5 folds for evaluation after finding hyperparameters
 
 # Grid search cross validation with random forest
 def cv_grid_random_forest():
@@ -75,7 +76,7 @@ def cv_grid_random_forest():
     # Get the best model
     best_model = grid_search.best_estimator_
     
-    # Create k-fold object for random forest cross validation on validation set 
+    # Create k-fold for random forest cross validation on validation set 
     kfold = KFold(n_splits=5, shuffle=True, random_state=42)
     
     # Store scores for each fold
@@ -88,7 +89,7 @@ def cv_grid_random_forest():
         'roc_auc': []
     }
     
-    # Perform k-fold cross validation with the best random forestmodel
+    # Perform k-fold cross validation with the best random forest model
     print('\nPer-fold Random Forest Scores:')
     for fold, (train_idx, val_idx) in enumerate(kfold.split(X_train, y_train), 1):
         # Split data
@@ -175,12 +176,12 @@ def cv_grid_svm():
     
     # Print SVM grid search results
     print('\nSVM Grid Search Results:')
-    print(f'Best SVM parameters: {grid_search.best_params_}')
+    print(f'Best SVM hyperparameters: {grid_search.best_params_}')
     
     # Get the best model
     best_model = grid_search.best_estimator_
     
-    # Create KFold object for SVM cross validation using validation data
+    # Create k-fold for SVM cross validation using validation data
     kfold = KFold(n_splits=5, shuffle=True, random_state=42)
     
     # Store scores for each fold
@@ -194,7 +195,7 @@ def cv_grid_svm():
     }
     
     # Perform k-fold cross validation with the best model
-    print('\nSVM Per-fold Evaluation Scores:')
+    print('\nSVM Per-fold Scores:')
     for fold, (train_idx, val_idx) in enumerate(kfold.split(X_train, y_train), 1):
         # Split data
         X_fold_train = X_train[train_idx]
@@ -269,14 +270,13 @@ def cv_grid_logistic_regression():
     }, {
         'solver': ['lbfgs', 'saga'],
         'penalty': [None],
-        'C': [1.0]  # C is ignored when penalty is None
+        'C': [1.0]  # C is ignored when penalty is None otherwise error 
     }, {
         'solver': ['saga'],
         'penalty': ['l1'],
         'C': [0.001, 0.01, 0.1, 1, 10, 100]
     }]
     
-    # Create KFold object for logistic regression cross validation using validation data
     kfold = KFold(n_splits=5, shuffle=True, random_state=42)
     
     # find best hyperparameters using grid search cross validation
@@ -301,7 +301,7 @@ def cv_grid_logistic_regression():
     best_model = LogisticRegression(C=1.0, penalty=None, solver='lbfgs', random_state=42, max_iter=1000)
     
     # k-fold CV with the best model 
-    print('\nPer-fold Evaluation Metrics:')
+    print('\nPer-fold Logistic Regression Scores:')
     fold_metrics = {
         'accuracy': [],
         'mae': [],
